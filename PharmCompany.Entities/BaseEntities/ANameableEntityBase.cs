@@ -8,9 +8,14 @@ namespace PharmCompany.Entities.BaseEntities
     public abstract class ANameableEntityBase : IIdentifiable, INameable
     {
 
+        //#################################################################################################################
+        #region CTOR
+
         /// <summary>
         /// CTOR
         /// </summary>
+        /// <param name="name"></param>
+        /// <param name="guid"></param>
         protected ANameableEntityBase(string name, Guid guid)
         {
 
@@ -19,6 +24,14 @@ namespace PharmCompany.Entities.BaseEntities
                 ? Guid.NewGuid()
                 : guid;
         }
+
+        /// <summary>
+        /// CTOR
+        /// </summary>
+        /// <param name="name"></param>
+        protected ANameableEntityBase(string name) : this(name, Guid.Empty) { }
+
+        #endregion // CTOR
 
 
         public Guid Id { get; private set; }
