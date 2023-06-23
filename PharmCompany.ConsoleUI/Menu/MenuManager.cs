@@ -22,10 +22,18 @@ namespace PharmCompany.ConsoleUI.Menu
 
         // - меню с общими операциями 
         private static MenuItemModel[] _commonOperationMenu ={
+            new MenuItemModel {MenuItemName = "Показать список", MenuItemAction = DisplayContent},
             new MenuItemModel {MenuItemName = strings.Create, MenuItemAction = CreateEntity},
             new MenuItemModel {MenuItemName = strings.Remove, MenuItemAction = RemoveEntity},
             new MenuItemModel {MenuItemName = strings.Back, MenuItemAction = Back},
         };
+
+
+        private static void DisplayContent()
+        {
+            throw new NotImplementedException();
+        }
+
 
         //#######################################################################################################################
         #region Menu actions
