@@ -1,4 +1,5 @@
 ﻿using PharmCompany.ConsoleApp.Services;
+using System;
 
 namespace PharmCompany.ConsoleApp.Menu
 {
@@ -8,8 +9,8 @@ namespace PharmCompany.ConsoleApp.Menu
     internal static class MenuManager
     {
         private static readonly string _COMPANY_NAME = strings.CompanyName;
-        private static MenuItemModel? _selectedMenuItem;
-        private static MenuItemModel? _selectedMainMenuItem;
+        private static MenuItemModel _selectedMenuItem;
+        private static MenuItemModel _selectedMainMenuItem;
 
         // - главное меню
         private static MenuItemModel[] _mainMenu = {
@@ -94,7 +95,7 @@ namespace PharmCompany.ConsoleApp.Menu
         /// <summary>
         /// 
         /// </summary>
-        internal static void DisplayMenu(string? menuTitle = null, MenuItemModel[]? menu = null)
+        internal static void DisplayMenu(string menuTitle = null, MenuItemModel[] menu = null)
         {
             if (string.IsNullOrEmpty(menuTitle))
             {
@@ -110,7 +111,7 @@ namespace PharmCompany.ConsoleApp.Menu
         }
 
 
-        private static MenuItemModel? SelectMenuItem(string menuTitle, MenuItemModel[] menu)
+        private static MenuItemModel SelectMenuItem(string menuTitle, MenuItemModel[] menu)
         {
             int counter = 0;
             var selectedMenu = menu[counter];
@@ -123,17 +124,20 @@ namespace PharmCompany.ConsoleApp.Menu
                 DisplayToConsole.DisplayMenu(menuTitle, menu, selectedMenu);
 
                 key = Console.ReadKey();
-                counter = key.Key switch
+                switch (key.Key)
                 {
-                    ConsoleKey.UpArrow => --counter < 0
-                        ? menu.Length - 1
-                        : counter,
-                    ConsoleKey.DownArrow => ++counter > menu.Length - 1
-                        ? 0
-                        : counter,
-                    ConsoleKey.Escape => menu.Length - 1,
-                    _ => counter
-                };
+                    case ConsoleKey.UpArrow:
+                        if (--counter < 0)
+                            counter = menu.Length - 1;
+                        break;
+                    case ConsoleKey.DownArrow:
+                        if (++counter > menu.Length - 1)
+                            counter = 0;
+                        break;
+                    case ConsoleKey.Escape:
+                        counter = menu.Length - 1;
+                        break;
+                }
                 selectedMenu = menu[counter];
             }
             while (key.Key != ConsoleKey.Enter);

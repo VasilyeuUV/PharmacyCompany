@@ -1,4 +1,4 @@
-﻿namespace PharmCompany.ConsoleUI.Menu
+﻿namespace PharmCompany.ConsoleApp.Menu
 {
     /// <summary>
     /// Навигация по меню 

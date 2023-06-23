@@ -1,4 +1,6 @@
-﻿namespace PharmCompany.ConsoleApp.Menu
+﻿using System;
+
+namespace PharmCompany.ConsoleApp.Menu
 {
     /// <summary>
     /// Модель пункта меню
@@ -8,12 +10,12 @@
         /// <summary>
         /// Наименование пункта меню
         /// </summary>
-        public string? MenuItemName { get; set; }
+        public string MenuItemName { get; set; }
 
 
         /// <summary>
         /// Действие пункта меню
         /// </summary>
-        public Action? MenuItemAction { get; set; }
+        public Action MenuItemAction { get; set; }
     }
 }
