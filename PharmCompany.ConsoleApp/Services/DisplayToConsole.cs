@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace PharmCompany.ConsoleApp.Services
 {
@@ -40,10 +42,16 @@ namespace PharmCompany.ConsoleApp.Services
         /// Display Body
         /// </summary>
         /// <param name="title"></param>
-        internal static void DisplayBody(string[] strigs)
+        internal static void DisplayBody(string[] items, bool isNumberedList = false)
         {
-            foreach (var str in strigs)
-                Console.WriteLine(str);
+            for (int i = 0; i < items.Length; i++)
+            {
+                var item = isNumberedList
+                    ? $"{i + 1}. {items[i]}."
+                    : $"{items[i]}";
+                Console.WriteLine(item);
+            }
+
             Console.WriteLine();
         }
 
@@ -107,6 +115,7 @@ namespace PharmCompany.ConsoleApp.Services
             Console.ForegroundColor = ConsoleColor.White;
         }
 
+
         internal static T CreateObject<T>()
             where T : new()
         {
@@ -124,12 +133,42 @@ namespace PharmCompany.ConsoleApp.Services
             return entity;
         }
 
+
         private static string InputValue(PropertyInfo property)
         {
-            Console.Write($"{strings.Input} {GetAttributeDisplayName(property)}:");
+            Console.Write($"{strings.Input} {GetAttributeDisplayName(property)}: ");
             string value = Console.ReadLine();
             Console.WriteLine();
             return value;
+        }
+
+
+        internal static int? InputIntValue(string welcomeTxt)
+        {            
+            Console.Write($"{welcomeTxt}: " );
+
+            ConsoleKeyInfo key;
+            var sb = new StringBuilder();
+
+            while (true)
+            {
+                key = Console.ReadKey(true);
+                if (key.Key == ConsoleKey.Escape)
+                    return null;
+                if (key.Key == ConsoleKey.Enter)
+                    break;
+
+                if (char.IsDigit(key.KeyChar))
+                {
+                    sb.Append(key.KeyChar);
+                    Console.Write(key.KeyChar);
+                }
+            }
+            Console.WriteLine();
+
+            int result = 0;
+            int.TryParse(sb.ToString(), out result);
+            return result;
         }
 
 

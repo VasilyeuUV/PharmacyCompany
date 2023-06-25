@@ -129,6 +129,12 @@
   <data name="Create" xml:space="preserve">
     <value>Создать</value>
   </data>
+  <data name="EnterDeletedNumber" xml:space="preserve">
+    <value>Введите номер удаляемого объекта</value>
+  </data>
+  <data name="ErrorProperties" xml:space="preserve">
+    <value>Свойства объекта не соответствуют параметрам базы данных</value>
+  </data>
   <data name="Exit" xml:space="preserve">
     <value>Выход</value>
   </data>
@@ -138,6 +144,21 @@
   <data name="Input" xml:space="preserve">
     <value>Введите</value>
   </data>
+  <data name="ObjectAdded" xml:space="preserve">
+    <value>Объект добавлен</value>
+  </data>
+  <data name="ObjectDeleted" xml:space="preserve">
+    <value>Объект под номером {0} удалён</value>
+  </data>
+  <data name="ObjectNotAdded" xml:space="preserve">
+    <value>Объект добавить не удалось</value>
+  </data>
+  <data name="ObjectNotDeleted" xml:space="preserve">
+    <value>Объект под номером {0} удалить не удалось</value>
+  </data>
+  <data name="ObjectNotExist" xml:space="preserve">
+    <value>Объекта под номером {0} не существует</value>
+  </data>
   <data name="Pharmacy" xml:space="preserve">
     <value>Аптека</value>
   </data>
@@ -146,5 +167,8 @@
   </data>
   <data name="Storages" xml:space="preserve">
     <value>Склады</value>
+  </data>
+  <data name="WorkCompleted" xml:space="preserve">
+    <value>Работа завершена</value>
   </data>
 </root>

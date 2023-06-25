@@ -1,8 +1,10 @@
 ﻿using PharmCompany.ConsoleApp.DbLogics;
 using PharmCompany.ConsoleApp.Models;
 using PharmCompany.ConsoleApp.Services;
+using PharmCompany.ConsoleApp.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Reflection;
 
@@ -17,6 +19,7 @@ namespace PharmCompany.ConsoleApp.Menu
         private static MenuItemModel _selectedMenuItem;
         private static MenuItemModel _selectedMainMenuItem;
         private static DbCommands _dbCommands;
+        private static MainViewModel _mainViewModel = new MainViewModel();
 
 
         // - главное меню
@@ -58,7 +61,7 @@ namespace PharmCompany.ConsoleApp.Menu
 
         // - меню с общими операциями 
         private static MenuItemModel[] _commonOperationMenu = {
-            new MenuItemModel {MenuItemName = "Показать список", MenuItemAction = GetAll},
+            //new MenuItemModel {MenuItemName = "Показать список", MenuItemAction = GetAll},
             new MenuItemModel {MenuItemName = strings.Create, MenuItemAction = CreateEntity},
             new MenuItemModel {MenuItemName = strings.Remove, MenuItemAction = RemoveEntity},
             new MenuItemModel {MenuItemName = strings.Back, MenuItemAction = Back},
@@ -93,6 +96,7 @@ namespace PharmCompany.ConsoleApp.Menu
         {
             _selectedMainMenuItem = _selectedMenuItem;
             DisplayMenu(_selectedMenuItem?.MenuItemName, _commonOperationMenu);
+            Back();
         }
 
 
@@ -102,11 +106,10 @@ namespace PharmCompany.ConsoleApp.Menu
         /// <exception cref="NotImplementedException"></exception>
         private static void Exit()
         {
-            DisplayToConsole.WaitForContinue("Work completed.");
+            DisplayToConsole.WaitForContinue(strings.WorkCompleted);
         }
 
         #endregion // Main menu actions
-
 
 
         //________________________________________________________________________________________________________________
@@ -121,22 +124,82 @@ namespace PharmCompany.ConsoleApp.Menu
             Dictionary<string, string> propertiesDict = null;
 
             if (_selectedMainMenuItem?.ObjectType == typeof(GoodsModel))
-                propertiesDict = CreateModel<GoodsModel>();
+            {
+                GoodsModel model = CreateModel<GoodsModel>();
+                propertiesDict = GetProperties(model)?.ToDictionary(p => p.Name, p => $"N'{p.GetValue(model)}'");
+            }
             if (_selectedMainMenuItem?.ObjectType == typeof(PharmacyModel))
-                propertiesDict = CreateModel<PharmacyModel>();
+            {
+                PharmacyModel model = CreateModel<PharmacyModel>();
+                propertiesDict = GetProperties(model)?
+                    .ToDictionary(p => p.Name, p => $"N'{p.GetValue(model)}'");
+            }
+
 
             if (propertiesDict == null
                 || propertiesDict.Count() < 1
                 || !CheckProperties(_selectedMainMenuItem.DbTable.ColumnNames, propertiesDict.Keys.ToList())
                 )
-                throw new InvalidOperationException("Свойства объекта не соответствуют параметрам базы данных");
+                throw new InvalidOperationException(strings.ErrorProperties);
 
             string columns = string.Join(", ", propertiesDict.Keys.ToArray());
             string values = string.Join(", ", propertiesDict.Values.ToArray());
 
             var sqlCommand = $"INSERT INTO [{_selectedMainMenuItem.DbTable.TableName}] ({columns}) VALUES ({values})";
-            DbCommands.ExecuteCommand(sqlCommand);
+            var result = DbCommands.ExecuteCommand(sqlCommand);
+
+            if (result > 0)
+                DisplayToConsole.WaitForContinue(strings.ObjectAdded);
+            else
+                DisplayToConsole.WaitForContinue(strings.ObjectNotAdded);
         }
+
+
+        /// <summary>
+        /// Удалить сущность
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        private static void RemoveEntity()
+        {
+            int? removeNumber = null;
+            string[] guids = null;
+
+            if (_selectedMainMenuItem?.ObjectType == typeof(GoodsModel))
+            {
+                _mainViewModel.Goods = GetAll<GoodsModel>();                
+                DisplayToConsole.DisplayBody(_mainViewModel.Goods.Select(g => g.Name).ToArray(), isNumberedList: true);  
+                guids = _mainViewModel.Goods
+                    .Select(g => g.Id.ToString())
+                    .ToArray();
+            }
+
+            if (_selectedMainMenuItem?.ObjectType == typeof(PharmacyModel))
+            {
+                _mainViewModel.Pharmacies = GetAll<PharmacyModel>();
+                DisplayToConsole.DisplayBody(_mainViewModel.Pharmacies.Select(g => $"{g.Name} ({g.Adress}, {g.Phone})").ToArray(), isNumberedList: true);
+                guids = _mainViewModel.Pharmacies
+                    .Select(g => g.Id.ToString())
+                    .ToArray();
+            }
+
+            removeNumber = DisplayToConsole.InputIntValue(strings.EnterDeletedNumber);
+            if (removeNumber == null)
+                return;
+            if (removeNumber.Value > guids.Length)
+            {
+                DisplayToConsole.WaitForContinue(string.Format(strings.ObjectNotExist, removeNumber.Value));
+                return;
+            }
+
+            var sqlCommand = $"DELETE FROM [{_selectedMainMenuItem.DbTable.TableName}] WHERE [Id]='{guids[removeNumber.Value - 1]}'";
+            var result = DbCommands.ExecuteCommand(sqlCommand);
+
+            if (result > 0)
+                DisplayToConsole.WaitForContinue(string.Format(strings.ObjectDeleted, removeNumber.Value));
+            else
+                DisplayToConsole.WaitForContinue(string.Format(strings.ObjectNotDeleted, removeNumber.Value));
+        }
+
 
 
 
@@ -146,29 +209,21 @@ namespace PharmCompany.ConsoleApp.Menu
         ///  Получить Список сущностей
         /// </summary>
         /// <exception cref="NotImplementedException"></exception>
-        private static void GetAll()
+        private static IEnumerable<T> GetAll<T>()
+            where T : new()
         {
-            var sqlCommand = $"SELECT * FROM {_selectedMainMenuItem.DbTable}";
-            var result = DbCommands.SelectCommand(sqlCommand, _selectedMainMenuItem?.ObjectType).Result;
-        }
+            var sqlCommand = $"SELECT * FROM [{_selectedMainMenuItem.DbTable.TableName}]";
+            var dataRecords = DbCommands.SelectCommand(sqlCommand).Result;
 
+            if (dataRecords == null
+                || dataRecords.Length < 1
+                )
+            {
+                DisplayToConsole.WaitForContinue("Нет данных");
+                return null;
+            }
 
-
-
-
-
-
-
-
-
-
-        /// <summary>
-        /// Удалить сущность
-        /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
-        private static void RemoveEntity()
-        {
-            throw new NotImplementedException();
+            return GetModels<T>(dataRecords, _selectedMainMenuItem);
         }
 
 
@@ -250,16 +305,62 @@ namespace PharmCompany.ConsoleApp.Menu
         #endregion // Menu navigation
 
 
+
+
+        /// <summary>
+        /// Получить список моделей из базы данных
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dataRecords"></param>
+        /// <param name="selectedMainMenuItem"></param>
+        /// <returns></returns>
+        private static IEnumerable<T> GetModels<T>(IDataRecord[] dataRecords, MenuItemModel selectedMainMenuItem)
+            where T : new()
+        {
+            List<T> models = new List<T>();
+
+            for (int i = 0; i < dataRecords.Length; i++)
+            {
+                T model = CreateModel<T>(dataRecords[i]);
+                models.Add(model);
+            }
+            return models.ToArray();
+        }
+
+
         /// <summary>
         /// Создание модели и получение его свойств
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns>Свойства модели</returns>
-        private static Dictionary<string, string> CreateModel<T>()
+        private static T CreateModel<T>(IDataRecord dataRecord = null)
             where T : new()
         {
-            T model = DisplayToConsole.CreateObject<T>();
-            return GetProperties(model);
+            T model;
+
+            if (dataRecord == null)
+            {
+                model = DisplayToConsole.CreateObject<T>();
+                return model;
+            }
+
+            Dictionary<string, string> dbValues = new Dictionary<string, string>();
+            for (int i = 0; i < dataRecord.FieldCount; i++)
+            {
+                dbValues.Add(dataRecord.GetName(i), dataRecord.GetValue(i).ToString());
+            }
+
+            model = new T();
+            var propertyInfo = GetProperties(model).ToList();
+
+            foreach (var property in propertyInfo)
+            {
+                if (property.PropertyType == typeof(Guid))
+                    property.SetValue(model, new Guid(dbValues[property.Name]));
+                else 
+                    property.SetValue(model, dbValues[property.Name]);
+            }
+            return model;
         }
 
 
@@ -294,12 +395,12 @@ namespace PharmCompany.ConsoleApp.Menu
         /// <typeparam name="T"></typeparam>
         /// <param name="model"></param>
         /// <returns></returns>
-        private static Dictionary<string, string> GetProperties<T>(T model)
+        private static PropertyInfo[] GetProperties<T>(T model)
             where T : new()
         {
-            PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            var propertiesDict = properties?.ToDictionary(p => p.Name, p => $"N'{p.GetValue(model)}'");
-            return propertiesDict;
+            return model == null
+                ? null
+                : typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
         }
     }
 }

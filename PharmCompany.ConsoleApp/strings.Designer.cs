@@ -97,6 +97,24 @@ namespace PharmCompany.ConsoleApp {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Введите номер удаляемого объекта.
+        /// </summary>
+        internal static string EnterDeletedNumber {
+            get {
+                return ResourceManager.GetString("EnterDeletedNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Свойства объекта не соответствуют параметрам базы данных.
+        /// </summary>
+        internal static string ErrorProperties {
+            get {
+                return ResourceManager.GetString("ErrorProperties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Выход.
         /// </summary>
         internal static string Exit {
@@ -124,6 +142,51 @@ namespace PharmCompany.ConsoleApp {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Объект добавлен.
+        /// </summary>
+        internal static string ObjectAdded {
+            get {
+                return ResourceManager.GetString("ObjectAdded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Объект под номером {0} удалён.
+        /// </summary>
+        internal static string ObjectDeleted {
+            get {
+                return ResourceManager.GetString("ObjectDeleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Объект добавить не удалось.
+        /// </summary>
+        internal static string ObjectNotAdded {
+            get {
+                return ResourceManager.GetString("ObjectNotAdded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Объект под номером {0} удалить не удалось.
+        /// </summary>
+        internal static string ObjectNotDeleted {
+            get {
+                return ResourceManager.GetString("ObjectNotDeleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Объекта под номером {0} не существует.
+        /// </summary>
+        internal static string ObjectNotExist {
+            get {
+                return ResourceManager.GetString("ObjectNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Аптека.
         /// </summary>
         internal static string Pharmacy {
@@ -147,6 +210,15 @@ namespace PharmCompany.ConsoleApp {
         internal static string Storages {
             get {
                 return ResourceManager.GetString("Storages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Работа завершена.
+        /// </summary>
+        internal static string WorkCompleted {
+            get {
+                return ResourceManager.GetString("WorkCompleted", resourceCulture);
             }
         }
     }
