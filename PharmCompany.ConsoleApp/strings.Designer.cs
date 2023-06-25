@@ -115,6 +115,15 @@ namespace PharmCompany.ConsoleApp {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Введите.
+        /// </summary>
+        internal static string Input {
+            get {
+                return ResourceManager.GetString("Input", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Аптека.
         /// </summary>
         internal static string Pharmacy {

@@ -135,6 +135,9 @@
   <data name="Goods" xml:space="preserve">
     <value>Товары</value>
   </data>
+  <data name="Input" xml:space="preserve">
+    <value>Введите</value>
+  </data>
   <data name="Pharmacy" xml:space="preserve">
     <value>Аптека</value>
   </data>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PharmCompany.ConsoleApp.Models.DbTables;
+using System;
 
 namespace PharmCompany.ConsoleApp.Menu
 {
@@ -7,6 +8,12 @@ namespace PharmCompany.ConsoleApp.Menu
     /// </summary>
     internal class MenuItemModel
     {
+        /// <summary>
+        /// Номер типа
+        /// </summary>
+        public Type ObjectType { get; set; }
+
+
         /// <summary>
         /// Наименование пункта меню
         /// </summary>
@@ -17,5 +24,11 @@ namespace PharmCompany.ConsoleApp.Menu
         /// Действие пункта меню
         /// </summary>
         public Action MenuItemAction { get; set; }
+
+
+        /// <summary>
+        /// Наименование таблицы в БД.
+        /// </summary>
+        public DbTableModel DbTable { get; set; }
     }
 }

@@ -1,5 +1,10 @@
-﻿using PharmCompany.ConsoleApp.Services;
+﻿using PharmCompany.ConsoleApp.DbLogics;
+using PharmCompany.ConsoleApp.Models;
+using PharmCompany.ConsoleApp.Services;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace PharmCompany.ConsoleApp.Menu
 {
@@ -11,33 +16,75 @@ namespace PharmCompany.ConsoleApp.Menu
         private static readonly string _COMPANY_NAME = strings.CompanyName;
         private static MenuItemModel _selectedMenuItem;
         private static MenuItemModel _selectedMainMenuItem;
+        private static DbCommands _dbCommands;
+
 
         // - главное меню
         private static MenuItemModel[] _mainMenu = {
-            new MenuItemModel {MenuItemName = strings.Goods, MenuItemAction = DisplayOperationMenu},
-            new MenuItemModel {MenuItemName = strings.Pharmacy, MenuItemAction = DisplayOperationMenu},
-            new MenuItemModel {MenuItemName = strings.Storages, MenuItemAction = DisplayOperationMenu},
-            new MenuItemModel {MenuItemName = strings.BatchGoods, MenuItemAction = DisplayOperationMenu},
-            new MenuItemModel {MenuItemName = strings.Exit, MenuItemAction = Exit},
+            new MenuItemModel
+            {
+                ObjectType = typeof(GoodsModel),
+                MenuItemName = strings.Goods,
+                MenuItemAction = DisplayOperationMenu,
+                DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Goods"))
+            },
+            new MenuItemModel
+            {
+                ObjectType = typeof(PharmacyModel),
+                MenuItemName = strings.Pharmacy,
+                MenuItemAction = DisplayOperationMenu,
+                DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Pharmacy"))
+            },
+            new MenuItemModel
+            {
+                ObjectType = typeof(StorageModel),
+                MenuItemName = strings.Storages,
+                MenuItemAction = DisplayOperationMenu,
+                DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Storages"))
+            },
+            new MenuItemModel
+            {
+                ObjectType = typeof(BatchGoodsModel),
+                MenuItemName = strings.BatchGoods,
+                MenuItemAction = DisplayOperationMenu,
+                DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("BatchGoods"))
+            },
+            new MenuItemModel
+            {
+                MenuItemName = strings.Exit,
+                MenuItemAction = Exit,
+            },
         };
 
         // - меню с общими операциями 
-        private static MenuItemModel[] _commonOperationMenu ={
-            new MenuItemModel {MenuItemName = "Показать список", MenuItemAction = DisplayContent},
+        private static MenuItemModel[] _commonOperationMenu = {
+            new MenuItemModel {MenuItemName = "Показать список", MenuItemAction = GetAll},
             new MenuItemModel {MenuItemName = strings.Create, MenuItemAction = CreateEntity},
             new MenuItemModel {MenuItemName = strings.Remove, MenuItemAction = RemoveEntity},
             new MenuItemModel {MenuItemName = strings.Back, MenuItemAction = Back},
         };
 
 
-        private static void DisplayContent()
+        /// <summary>
+        /// Для рпаботы с БД
+        /// </summary>
+        public static DbCommands DbCommands
         {
-            throw new NotImplementedException();
+            get
+            {
+                if (_dbCommands == null)
+                    _dbCommands = new DbCommands();
+                return _dbCommands;
+            }
         }
 
 
         //#######################################################################################################################
         #region Menu actions
+
+
+        //________________________________________________________________________________________________________________
+        #region Main menu actions
 
         /// <summary>
         /// Показать меню с задачами
@@ -51,13 +98,101 @@ namespace PharmCompany.ConsoleApp.Menu
 
 
         /// <summary>
+        /// Выход из текущего меню
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        private static void Exit()
+        {
+            DisplayToConsole.WaitForContinue("Work completed.");
+        }
+
+        #endregion // Main menu actions
+
+
+
+
+
+
+
+        /// <summary>
+        ///  Получить Список сущностей
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        private static void GetAll()
+        {
+            var sqlCommand = $"SELECT * FROM {_selectedMainMenuItem.DbTable}";
+            var result = DbCommands.SelectCommand(sqlCommand, _selectedMainMenuItem?.ObjectType).Result;
+        }
+
+
+
+        /// <summary>
         /// Создать сущность
         /// </summary>
         /// <exception cref="NotImplementedException"></exception>
         private static void CreateEntity()
         {
-            throw new NotImplementedException();
+            Dictionary<string, string> propertiesDict = null;
+
+            if (_selectedMainMenuItem?.ObjectType == typeof(GoodsModel))
+            {
+                GoodsModel goodsModel = DisplayToConsole.CreateObject<GoodsModel>();
+                propertiesDict = GetProperties(goodsModel);
+            }
+
+            if (!CheckProperties(_selectedMainMenuItem.DbTable.ColumnNames, propertiesDict.Keys.ToList())
+                || propertiesDict == null
+                || propertiesDict.Count() < 1
+                )
+                throw new InvalidOperationException("Свойства объекта не соответствуют параметрам базы данных");
+
+            string columns = string.Join(", ", propertiesDict.Keys.ToArray());
+            string values = string.Join(", ", propertiesDict.Values.ToArray());
+
+            var sqlCommand = $"INSERT INTO [{_selectedMainMenuItem.DbTable.TableName}] ({columns}) VALUES ({values})";
+            DbCommands.ExecuteCommand(sqlCommand);
         }
+
+
+        /// <summary>
+        /// Проверка соответствия имён параметрав наименованиям колонок таблиц
+        /// </summary>
+        /// <param name="dbTable"></param>
+        /// <param name="dictKeys"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        private static bool CheckProperties(IEnumerable<string> columnNames, IEnumerable<string> dictKeys)
+        {
+            // - отличается количество параметров
+            if (columnNames.Count() != dictKeys.Count())
+                return false;
+
+            var names = columnNames.OrderBy(name => name).ToArray();
+            var keys = dictKeys.OrderBy(key => key).ToArray();
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                if (names[i] != keys[i])
+                    return false;
+            }
+            return true;
+        }
+
+
+        /// <summary>
+        /// Получение значений свойство объекта класса
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        private static Dictionary<string, string> GetProperties<T>(T model)
+            where T : class
+        {
+            PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var propertiesDict = properties?.ToDictionary(p => p.Name, p => $"N'{p.GetValue(model)}'");
+            return propertiesDict;
+        }
+
 
 
         /// <summary>
@@ -79,21 +214,15 @@ namespace PharmCompany.ConsoleApp.Menu
             DisplayMenu();
         }
 
-
-        /// <summary>
-        /// Выход из текущего меню
-        /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
-        private static void Exit()
-        {
-            DisplayToConsole.WaitForContinue("Work completed.");
-        }
-
         #endregion // Menu actions
 
 
+
+        //#######################################################################################################################
+        #region Menu navigation
+
         /// <summary>
-        /// 
+        /// Показать меню
         /// </summary>
         internal static void DisplayMenu(string menuTitle = null, MenuItemModel[] menu = null)
         {
@@ -111,6 +240,12 @@ namespace PharmCompany.ConsoleApp.Menu
         }
 
 
+        /// <summary>
+        /// Выбрать пункт меню
+        /// </summary>
+        /// <param name="menuTitle"></param>
+        /// <param name="menu"></param>
+        /// <returns></returns>
         private static MenuItemModel SelectMenuItem(string menuTitle, MenuItemModel[] menu)
         {
             int counter = 0;
@@ -144,5 +279,7 @@ namespace PharmCompany.ConsoleApp.Menu
 
             return selectedMenu;
         }
+
+        #endregion // Menu navigation
     }
 }

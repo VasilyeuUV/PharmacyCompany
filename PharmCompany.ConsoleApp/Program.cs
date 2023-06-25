@@ -1,4 +1,5 @@
 ﻿using PharmCompany.ConsoleApp.Menu;
+using System;
 
 namespace PharmCompany.ConsoleApp
 {
@@ -6,6 +7,7 @@ namespace PharmCompany.ConsoleApp
     {
         static void Main(string[] args)
         {
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
             MenuManager.DisplayMenu();
         }
     }
