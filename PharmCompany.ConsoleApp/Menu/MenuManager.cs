@@ -33,7 +33,7 @@ namespace PharmCompany.ConsoleApp.Menu
                 ObjectType = typeof(PharmacyModel),
                 MenuItemName = strings.Pharmacy,
                 MenuItemAction = DisplayOperationMenu,
-                DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Pharmacy"))
+                DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Pharmacies"))
             },
             new MenuItemModel
             {
@@ -82,7 +82,6 @@ namespace PharmCompany.ConsoleApp.Menu
         //#######################################################################################################################
         #region Menu actions
 
-
         //________________________________________________________________________________________________________________
         #region Main menu actions
 
@@ -110,9 +109,38 @@ namespace PharmCompany.ConsoleApp.Menu
 
 
 
+        //________________________________________________________________________________________________________________
+        #region Operation menu actions
+
+        /// <summary>
+        /// Создать сущность
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        private static void CreateEntity()
+        {
+            Dictionary<string, string> propertiesDict = null;
+
+            if (_selectedMainMenuItem?.ObjectType == typeof(GoodsModel))
+                propertiesDict = CreateModel<GoodsModel>();
+            if (_selectedMainMenuItem?.ObjectType == typeof(PharmacyModel))
+                propertiesDict = CreateModel<PharmacyModel>();
+
+            if (propertiesDict == null
+                || propertiesDict.Count() < 1
+                || !CheckProperties(_selectedMainMenuItem.DbTable.ColumnNames, propertiesDict.Keys.ToList())
+                )
+                throw new InvalidOperationException("Свойства объекта не соответствуют параметрам базы данных");
+
+            string columns = string.Join(", ", propertiesDict.Keys.ToArray());
+            string values = string.Join(", ", propertiesDict.Values.ToArray());
+
+            var sqlCommand = $"INSERT INTO [{_selectedMainMenuItem.DbTable.TableName}] ({columns}) VALUES ({values})";
+            DbCommands.ExecuteCommand(sqlCommand);
+        }
 
 
 
+        #endregion // Operation menu actions
 
         /// <summary>
         ///  Получить Список сущностей
@@ -126,72 +154,11 @@ namespace PharmCompany.ConsoleApp.Menu
 
 
 
-        /// <summary>
-        /// Создать сущность
-        /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
-        private static void CreateEntity()
-        {
-            Dictionary<string, string> propertiesDict = null;
-
-            if (_selectedMainMenuItem?.ObjectType == typeof(GoodsModel))
-            {
-                GoodsModel goodsModel = DisplayToConsole.CreateObject<GoodsModel>();
-                propertiesDict = GetProperties(goodsModel);
-            }
-
-            if (!CheckProperties(_selectedMainMenuItem.DbTable.ColumnNames, propertiesDict.Keys.ToList())
-                || propertiesDict == null
-                || propertiesDict.Count() < 1
-                )
-                throw new InvalidOperationException("Свойства объекта не соответствуют параметрам базы данных");
-
-            string columns = string.Join(", ", propertiesDict.Keys.ToArray());
-            string values = string.Join(", ", propertiesDict.Values.ToArray());
-
-            var sqlCommand = $"INSERT INTO [{_selectedMainMenuItem.DbTable.TableName}] ({columns}) VALUES ({values})";
-            DbCommands.ExecuteCommand(sqlCommand);
-        }
 
 
-        /// <summary>
-        /// Проверка соответствия имён параметрав наименованиям колонок таблиц
-        /// </summary>
-        /// <param name="dbTable"></param>
-        /// <param name="dictKeys"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        private static bool CheckProperties(IEnumerable<string> columnNames, IEnumerable<string> dictKeys)
-        {
-            // - отличается количество параметров
-            if (columnNames.Count() != dictKeys.Count())
-                return false;
-
-            var names = columnNames.OrderBy(name => name).ToArray();
-            var keys = dictKeys.OrderBy(key => key).ToArray();
-
-            for (int i = 0; i < names.Length; i++)
-            {
-                if (names[i] != keys[i])
-                    return false;
-            }
-            return true;
-        }
 
 
-        /// <summary>
-        /// Получение значений свойство объекта класса
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        private static Dictionary<string, string> GetProperties<T>(T model)
-            where T : class
-        {
-            PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            var propertiesDict = properties?.ToDictionary(p => p.Name, p => $"N'{p.GetValue(model)}'");
-            return propertiesDict;
-        }
+
 
 
 
@@ -281,5 +248,58 @@ namespace PharmCompany.ConsoleApp.Menu
         }
 
         #endregion // Menu navigation
+
+
+        /// <summary>
+        /// Создание модели и получение его свойств
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns>Свойства модели</returns>
+        private static Dictionary<string, string> CreateModel<T>()
+            where T : new()
+        {
+            T model = DisplayToConsole.CreateObject<T>();
+            return GetProperties(model);
+        }
+
+
+        /// <summary>
+        /// Проверка соответствия имён параметрав наименованиям колонок таблиц
+        /// </summary>
+        /// <param name="dbTable"></param>
+        /// <param name="dictKeys"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        private static bool CheckProperties(IEnumerable<string> columnNames, IEnumerable<string> dictKeys)
+        {
+            // - отличается количество параметров
+            if (columnNames.Count() != dictKeys.Count())
+                return false;
+
+            var names = columnNames.OrderBy(name => name).ToArray();
+            var keys = dictKeys.OrderBy(key => key).ToArray();
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                if (names[i] != keys[i])
+                    return false;
+            }
+            return true;
+        }
+
+
+        /// <summary>
+        /// Получение значений свойство объекта класса
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        private static Dictionary<string, string> GetProperties<T>(T model)
+            where T : new()
+        {
+            PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var propertiesDict = properties?.ToDictionary(p => p.Name, p => $"N'{p.GetValue(model)}'");
+            return propertiesDict;
+        }
     }
 }
