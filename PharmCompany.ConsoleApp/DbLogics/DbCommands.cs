@@ -1,14 +1,11 @@
-﻿using PharmCompany.ConsoleApp.Menu;
-using PharmCompany.ConsoleApp.Models.DbTables;
+﻿using PharmCompany.ConsoleApp.Models.DbTables;
 using PharmCompany.ConsoleApp.Services;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
-using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace PharmCompany.ConsoleApp.DbLogics
@@ -77,9 +74,6 @@ namespace PharmCompany.ConsoleApp.DbLogics
         /// <returns></returns>
         internal async Task<IDataRecord[]> SelectCommand(string sqlCommand)
         {
-            //Dictionary<string, string> dbValues = new Dictionary<string, string>();
-
-
             using (var connection = new SqlConnection(_connectionString))
             {
                 using (var command = new SqlCommand(sqlCommand, connection))
@@ -91,40 +85,6 @@ namespace PharmCompany.ConsoleApp.DbLogics
                         {
                             if (reader.HasRows)
                                 return reader.Cast<IDataRecord>().ToArray();
-
-
-                            //{
-
-                            //    //for (int i = 0; i < properties.Length; i++)
-                            //    //{
-                            //    //    var prop = properties[i];
-
-                            //    //    for (int j = 0; j < prop.FieldCount; j++)
-                            //    //    {
-                            //    //        dbValues.Add(properties[i].GetName(j), properties[i].GetValue(j).ToString());
-
-                            //    //    }
-
-                            //    //}
-
-
-                            //    //var propertiesDict = properties?.ToDictionary(p => p.GetName(), p => $"N'{p.GetValue(model)}'");
-
-
-
-                            //    //List<string> list = (from IDataRecord r in reader select (string)r["FieldName"])
-                            //    //                     .ToDictionary();
-
-                            //    //while (reader.Read())
-                            //    //{
-
-                            //    //    var id = reader[];
-                            //    //    var name = reader.GetValue(1);
-                            //    //    var age = reader.GetValue(2);
-
-                            //    //    Console.WriteLine($"{id} \t {name} \t {age}");
-                            //    //}
-                            //}
                         }
                     }              
                     catch (SqlException e)
@@ -139,10 +99,6 @@ namespace PharmCompany.ConsoleApp.DbLogics
                 }
             }
         }
-
-
-
-
 
 
         /// <summary>
