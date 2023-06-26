@@ -1,5 +1,4 @@
-﻿using PharmCompany.ConsoleApp.Models;
-using PharmCompany.ConsoleApp.Models.DbTables;
+﻿using PharmCompany.ConsoleApp.Models.DbTables;
 using System;
 using System.Collections.Generic;
 

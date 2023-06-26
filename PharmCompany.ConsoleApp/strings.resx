@@ -153,6 +153,9 @@
   <data name="Input" xml:space="preserve">
     <value>Введите</value>
   </data>
+  <data name="NoData" xml:space="preserve">
+    <value>Нет данных</value>
+  </data>
   <data name="ObjectAdded" xml:space="preserve">
     <value>Объект добавлен</value>
   </data>

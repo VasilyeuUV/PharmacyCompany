@@ -169,6 +169,15 @@ namespace PharmCompany.ConsoleApp {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Нет данных.
+        /// </summary>
+        internal static string NoData {
+            get {
+                return ResourceManager.GetString("NoData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Объект добавлен.
         /// </summary>
         internal static string ObjectAdded {

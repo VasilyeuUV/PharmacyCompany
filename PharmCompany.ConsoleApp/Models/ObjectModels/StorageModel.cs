@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Security.Policy;
 
 namespace PharmCompany.ConsoleApp.Models
 {
