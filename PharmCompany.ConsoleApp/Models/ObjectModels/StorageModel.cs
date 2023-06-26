@@ -1,4 +1,6 @@
-﻿namespace PharmCompany.ConsoleApp.Models
+﻿using System.ComponentModel;
+
+namespace PharmCompany.ConsoleApp.Models
 {
     /// <summary>
     /// Склад аптеки
@@ -8,6 +10,7 @@
         /// <summary>
         ///  Аптека
         /// </summary>
+        [DisplayName("Номер Аптеки")] 
         public PharmacyModel Pharmacy { get; set; }
     }
 }

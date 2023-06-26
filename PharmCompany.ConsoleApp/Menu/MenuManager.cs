@@ -48,13 +48,18 @@ namespace PharmCompany.ConsoleApp.Menu
                     new MenuItemModel {MenuItemName = strings.Back, MenuItemAction = Back},
                 }
             },
-            //new MenuItemModel
-            //{
-            //    ObjectType = typeof(StorageModel),
-            //    MenuItemName = strings.Storages,
-            //    MenuItemAction = DisplayOperationMenu,
-            //    DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Storages"))
-            //},
+            new MenuItemModel
+            {
+                MenuItemName = strings.Storages,
+                MenuItemAction = DisplayOperationMenu,
+                DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Storages")),
+                SubMenu = new[] {
+                    //new MenuItemModel {MenuItemName = "Показать список", MenuItemAction = GetAll},
+                    new MenuItemModel {MenuItemName = strings.Create, MenuItemAction = CreateEntity<StorageModel>},
+                    new MenuItemModel {MenuItemName = strings.Remove, MenuItemAction = RemoveEntity<StorageModel>},
+                    new MenuItemModel {MenuItemName = strings.Back, MenuItemAction = Back},
+                }
+            },
             //new MenuItemModel
             //{
             //    ObjectType = typeof(BatchGoodsModel),
