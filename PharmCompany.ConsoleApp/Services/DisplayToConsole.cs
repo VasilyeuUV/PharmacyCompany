@@ -127,7 +127,11 @@ namespace PharmCompany.ConsoleApp.Services
                 if (property.Name == "Id")
                     property.SetValue(entity, Guid.NewGuid());
                 else
-                    property.SetValue(entity, DisplayToConsole.InputValue(property));
+                {
+                    var value = DisplayToConsole.InputValue(property);
+                    if (value != null)
+                        property.SetValue(entity, value);
+                }
             }
 
             return entity;
@@ -136,7 +140,11 @@ namespace PharmCompany.ConsoleApp.Services
 
         private static string InputValue(PropertyInfo property)
         {
-            Console.Write($"{strings.Input} {GetAttributeDisplayName(property)}: ");
+            var displayName = GetAttributeDisplayName(property);
+            if (string.IsNullOrEmpty(displayName))
+                return null;
+
+            Console.Write($"{strings.Input} {displayName}: ");
             string value = Console.ReadLine();
             Console.WriteLine();
             return value;

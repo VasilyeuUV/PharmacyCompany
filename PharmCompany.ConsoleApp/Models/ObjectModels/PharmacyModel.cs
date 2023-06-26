@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace PharmCompany.ConsoleApp.Models
 {
@@ -8,7 +7,7 @@ namespace PharmCompany.ConsoleApp.Models
         /// <summary>
         /// Адрес
         /// </summary>
-        [DisplayName("Адрес")] 
+        [DisplayName("Адрес")]
         public string Adress { get; set; }
 
 
@@ -17,5 +16,8 @@ namespace PharmCompany.ConsoleApp.Models
         /// </summary>
         [DisplayName("Телефон")]
         public string Phone { get; set; }
+
+
+        public override string DisplayFormat => $"{Name} ({Adress}, {Phone})";
     }
 }

@@ -26,32 +26,42 @@ namespace PharmCompany.ConsoleApp.Menu
         private static MenuItemModel[] _mainMenu = {
             new MenuItemModel
             {
-                ObjectType = typeof(GoodsModel),
                 MenuItemName = strings.Goods,
                 MenuItemAction = DisplayOperationMenu,
-                DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Goods"))
+                DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Goods")),
+                SubMenu = new[] {
+                    //new MenuItemModel {MenuItemName = "Показать список", MenuItemAction = GetAll},
+                    new MenuItemModel {MenuItemName = strings.Create, MenuItemAction = CreateEntity<GoodsModel>},
+                    new MenuItemModel {MenuItemName = strings.Remove, MenuItemAction = RemoveEntity<GoodsModel>},
+                    new MenuItemModel {MenuItemName = strings.Back, MenuItemAction = Back},
+                }
             },
             new MenuItemModel
             {
-                ObjectType = typeof(PharmacyModel),
                 MenuItemName = strings.Pharmacy,
                 MenuItemAction = DisplayOperationMenu,
-                DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Pharmacies"))
+                DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Pharmacies")),
+                SubMenu = new[] {
+                    //new MenuItemModel {MenuItemName = "Показать список", MenuItemAction = GetAll},
+                    new MenuItemModel {MenuItemName = strings.Create, MenuItemAction = CreateEntity<PharmacyModel>},
+                    new MenuItemModel {MenuItemName = strings.Remove, MenuItemAction = RemoveEntity<PharmacyModel>},
+                    new MenuItemModel {MenuItemName = strings.Back, MenuItemAction = Back},
+                }
             },
-            new MenuItemModel
-            {
-                ObjectType = typeof(StorageModel),
-                MenuItemName = strings.Storages,
-                MenuItemAction = DisplayOperationMenu,
-                DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Storages"))
-            },
-            new MenuItemModel
-            {
-                ObjectType = typeof(BatchGoodsModel),
-                MenuItemName = strings.BatchGoods,
-                MenuItemAction = DisplayOperationMenu,
-                DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("BatchGoods"))
-            },
+            //new MenuItemModel
+            //{
+            //    ObjectType = typeof(StorageModel),
+            //    MenuItemName = strings.Storages,
+            //    MenuItemAction = DisplayOperationMenu,
+            //    DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Storages"))
+            //},
+            //new MenuItemModel
+            //{
+            //    ObjectType = typeof(BatchGoodsModel),
+            //    MenuItemName = strings.BatchGoods,
+            //    MenuItemAction = DisplayOperationMenu,
+            //    DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("BatchGoods"))
+            //},
             new MenuItemModel
             {
                 MenuItemName = strings.Exit,
@@ -59,13 +69,14 @@ namespace PharmCompany.ConsoleApp.Menu
             },
         };
 
+
         // - меню с общими операциями 
-        private static MenuItemModel[] _commonOperationMenu = {
-            //new MenuItemModel {MenuItemName = "Показать список", MenuItemAction = GetAll},
-            new MenuItemModel {MenuItemName = strings.Create, MenuItemAction = CreateEntity},
-            new MenuItemModel {MenuItemName = strings.Remove, MenuItemAction = RemoveEntity},
-            new MenuItemModel {MenuItemName = strings.Back, MenuItemAction = Back},
-        };
+        //private static MenuItemModel[] _commonOperationMenu = {
+        //    //new MenuItemModel {MenuItemName = "Показать список", MenuItemAction = GetAll},
+        //    new MenuItemModel {MenuItemName = strings.Create, MenuItemAction = CreateEntity},
+        //    new MenuItemModel {MenuItemName = strings.Remove, MenuItemAction = RemoveEntity},
+        //    new MenuItemModel {MenuItemName = strings.Back, MenuItemAction = Back},
+        //};
 
 
         /// <summary>
@@ -95,7 +106,8 @@ namespace PharmCompany.ConsoleApp.Menu
         private static void DisplayOperationMenu()
         {
             _selectedMainMenuItem = _selectedMenuItem;
-            DisplayMenu(_selectedMenuItem?.MenuItemName, _commonOperationMenu);
+            //DisplayMenu(_selectedMenuItem?.MenuItemName, _commonOperationMenu);
+            DisplayMenu(_selectedMenuItem?.MenuItemName, _selectedMenuItem?.SubMenu);
             Back();
         }
 
@@ -116,25 +128,18 @@ namespace PharmCompany.ConsoleApp.Menu
         #region Operation menu actions
 
         /// <summary>
-        /// Создать сущность
+        /// Создание объекта
         /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
-        private static void CreateEntity()
+        /// <typeparam name="T"></typeparam>
+        /// <exception cref="InvalidOperationException"></exception>
+        private static void CreateEntity<T>()
+            where T : new()
         {
             Dictionary<string, string> propertiesDict = null;
 
-            if (_selectedMainMenuItem?.ObjectType == typeof(GoodsModel))
-            {
-                GoodsModel model = CreateModel<GoodsModel>();
-                propertiesDict = GetProperties(model)?.ToDictionary(p => p.Name, p => $"N'{p.GetValue(model)}'");
-            }
-            if (_selectedMainMenuItem?.ObjectType == typeof(PharmacyModel))
-            {
-                PharmacyModel model = CreateModel<PharmacyModel>();
-                propertiesDict = GetProperties(model)?
-                    .ToDictionary(p => p.Name, p => $"N'{p.GetValue(model)}'");
-            }
-
+            T model = CreateModel<T>();
+            propertiesDict = GetProperties(model)?.Where(p => p.Name != "DisplayFormat")
+                .ToDictionary(p => p.Name, p => $"N'{p.GetValue(model)}'");
 
             if (propertiesDict == null
                 || propertiesDict.Count() < 1
@@ -156,31 +161,21 @@ namespace PharmCompany.ConsoleApp.Menu
 
 
         /// <summary>
-        /// Удалить сущность
+        /// Удаление объекта
         /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
-        private static void RemoveEntity()
+        /// <typeparam name="T"></typeparam>
+        private static void RemoveEntity<T>()
+            where T : class, new()
         {
             int? removeNumber = null;
             string[] guids = null;
 
-            if (_selectedMainMenuItem?.ObjectType == typeof(GoodsModel))
-            {
-                _mainViewModel.Goods = GetAll<GoodsModel>();                
-                DisplayToConsole.DisplayBody(_mainViewModel.Goods.Select(g => g.Name).ToArray(), isNumberedList: true);  
-                guids = _mainViewModel.Goods
-                    .Select(g => g.Id.ToString())
-                    .ToArray();
-            }
+            var models = GetAll<T>();
+            DisplayToConsole.DisplayBody(models.Select(g => (g as ANameableEntityBase).DisplayFormat).ToArray(), isNumberedList: true);
+            guids = models
+                .Select(g => (g as ANameableEntityBase).Id.ToString())
+                .ToArray();
 
-            if (_selectedMainMenuItem?.ObjectType == typeof(PharmacyModel))
-            {
-                _mainViewModel.Pharmacies = GetAll<PharmacyModel>();
-                DisplayToConsole.DisplayBody(_mainViewModel.Pharmacies.Select(g => $"{g.Name} ({g.Adress}, {g.Phone})").ToArray(), isNumberedList: true);
-                guids = _mainViewModel.Pharmacies
-                    .Select(g => g.Id.ToString())
-                    .ToArray();
-            }
 
             removeNumber = DisplayToConsole.InputIntValue(strings.EnterDeletedNumber);
             if (removeNumber == null)
@@ -200,10 +195,8 @@ namespace PharmCompany.ConsoleApp.Menu
                 DisplayToConsole.WaitForContinue(string.Format(strings.ObjectNotDeleted, removeNumber.Value));
         }
 
-
-
-
         #endregion // Operation menu actions
+
 
         /// <summary>
         ///  Получить Список сущностей
@@ -305,8 +298,6 @@ namespace PharmCompany.ConsoleApp.Menu
         #endregion // Menu navigation
 
 
-
-
         /// <summary>
         /// Получить список моделей из базы данных
         /// </summary>
@@ -351,14 +342,21 @@ namespace PharmCompany.ConsoleApp.Menu
             }
 
             model = new T();
-            var propertyInfo = GetProperties(model).ToList();
+            var propertyInfo = GetProperties(model)
+                .ToList();
 
             foreach (var property in propertyInfo)
             {
                 if (property.PropertyType == typeof(Guid))
                     property.SetValue(model, new Guid(dbValues[property.Name]));
-                else 
-                    property.SetValue(model, dbValues[property.Name]);
+                else
+                    try
+                    {
+                        property.SetValue(model, dbValues[property.Name]);
+                    }
+                    catch (Exception)
+                    {
+                    }
             }
             return model;
         }

@@ -15,5 +15,11 @@ namespace PharmCompany.ConsoleApp.Models
         [DisplayName("Наименование")]
         public string Name { get; internal set; }
 
+
+        /// <summary>
+        /// Формат отображения объекта класса
+        /// </summary>
+        public virtual string DisplayFormat => Name;
+
     }
 }

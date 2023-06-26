@@ -8,11 +8,6 @@ namespace PharmCompany.ConsoleApp.Menu
     /// </summary>
     internal class MenuItemModel
     {
-        /// <summary>
-        /// Номер типа
-        /// </summary>
-        public Type ObjectType { get; set; }
-
 
         /// <summary>
         /// Наименование пункта меню
@@ -30,5 +25,10 @@ namespace PharmCompany.ConsoleApp.Menu
         /// Наименование таблицы в БД.
         /// </summary>
         public DbTableModel DbTable { get; set; }
+
+        /// <summary>
+        /// Подменю
+        /// </summary>
+        public MenuItemModel[] SubMenu { get; set; }
     }
 }
