@@ -1,5 +1,7 @@
-﻿using PharmCompany.ConsoleApp.Models.DbTables;
+﻿using PharmCompany.ConsoleApp.Models;
+using PharmCompany.ConsoleApp.Models.DbTables;
 using System;
+using System.Collections.Generic;
 
 namespace PharmCompany.ConsoleApp.Menu
 {
@@ -30,5 +32,12 @@ namespace PharmCompany.ConsoleApp.Menu
         /// Подменю
         /// </summary>
         public MenuItemModel[] SubMenu { get; set; }
+
+
+        /// <summary>
+        /// Таблицы, от которых зависит
+        /// </summary>
+        public Dictionary<string, DbTableModel> DependOnTables { get; internal set; }
+
     }
 }

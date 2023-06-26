@@ -1,13 +1,8 @@
 ﻿using PharmCompany.ConsoleApp.Menu;
-using PharmCompany.ConsoleApp.Models;
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace PharmCompany.ConsoleApp.Services
 {
@@ -126,6 +121,14 @@ namespace PharmCompany.ConsoleApp.Services
             {
                 if (property.Name == "Id")
                     property.SetValue(entity, Guid.NewGuid());
+                else if (property.Name.EndsWith("Id"))
+                    continue;
+                else if (property.PropertyType == typeof(int))
+                {
+                    var value = DisplayToConsole.InputIntValue(GetAttributeDisplayName(property));
+                    if (value != null)
+                        property.SetValue(entity, value);
+                }
                 else
                 {
                     var value = DisplayToConsole.InputValue(property);
@@ -187,49 +190,5 @@ namespace PharmCompany.ConsoleApp.Services
                 return null;
             return (atts[0] as DisplayNameAttribute).DisplayName;
         }
-
-
-
-        //public static string GetPropertyDisplayName<T>(Expression<Func<T, object>> propertyExpression)
-        //{
-        //    var memberInfo = GetPropertyInformation(propertyExpression.Body);
-        //    if (memberInfo == null)
-        //    {
-        //        throw new ArgumentException(
-        //            "No property reference expression was found.",
-        //            "propertyExpression");
-        //    }
-
-        //    var attr = memberInfo.GetAttribute<DisplayNameAttribute>(false);
-        //    if (attr == null)
-        //    {
-        //        return memberInfo.Name;
-        //    }
-
-        //    return attr.DisplayName;
-        //}
-
-
-        //public static MemberInfo GetPropertyInformation(Expression propertyExpression)
-        //{
-        //    Debug.Assert(propertyExpression != null, "propertyExpression != null");
-        //    MemberExpression memberExpr = propertyExpression as MemberExpression;
-        //    if (memberExpr == null)
-        //    {
-        //        UnaryExpression unaryExpr = propertyExpression as UnaryExpression;
-        //        if (unaryExpr != null
-        //            && unaryExpr.NodeType == ExpressionType.Convert
-        //            )
-        //            memberExpr = unaryExpr.Operand as MemberExpression;
-
-        //    }
-
-        //    if (memberExpr != null
-        //        && memberExpr.Member.MemberType == MemberTypes.Property
-        //        )
-        //        return memberExpr.Member;
-
-        //    return null;
-        //}
     }
 }

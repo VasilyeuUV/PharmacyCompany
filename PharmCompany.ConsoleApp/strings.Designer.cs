@@ -106,6 +106,24 @@ namespace PharmCompany.ConsoleApp {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Введите номер владельца объекта.
+        /// </summary>
+        internal static string EnterMasterNumber {
+            get {
+                return ResourceManager.GetString("EnterMasterNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Введите номер объекта.
+        /// </summary>
+        internal static string EnterObjectNumber {
+            get {
+                return ResourceManager.GetString("EnterObjectNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Свойства объекта не соответствуют параметрам базы данных.
         /// </summary>
         internal static string ErrorProperties {

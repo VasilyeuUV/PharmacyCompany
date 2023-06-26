@@ -132,6 +132,12 @@
   <data name="EnterDeletedNumber" xml:space="preserve">
     <value>Введите номер удаляемого объекта</value>
   </data>
+  <data name="EnterMasterNumber" xml:space="preserve">
+    <value>Введите номер владельца объекта</value>
+  </data>
+  <data name="EnterObjectNumber" xml:space="preserve">
+    <value>Введите номер объекта</value>
+  </data>
   <data name="ErrorProperties" xml:space="preserve">
     <value>Свойства объекта не соответствуют параметрам базы данных</value>
   </data>
