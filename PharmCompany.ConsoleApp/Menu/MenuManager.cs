@@ -7,8 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
+using System.Xml.Linq;
 
 namespace PharmCompany.ConsoleApp.Menu
 {
@@ -33,6 +35,7 @@ namespace PharmCompany.ConsoleApp.Menu
                 DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Goods")),
                 SubMenu = new[] {
                     //new MenuItemModel {MenuItemName = "Показать список", MenuItemAction = GetAll},
+                    new MenuItemModel {MenuItemName = strings.GetGoods, MenuItemAction = GetGoods}, 
                     new MenuItemModel {MenuItemName = strings.Create, MenuItemAction = CreateEntity<GoodsModel>},
                     new MenuItemModel {MenuItemName = strings.Remove, MenuItemAction = RemoveEntity<GoodsModel>},
                     new MenuItemModel {MenuItemName = strings.Back, MenuItemAction = Back},
@@ -91,6 +94,7 @@ namespace PharmCompany.ConsoleApp.Menu
         };
 
 
+
         /// <summary>
         /// Для рпаботы с БД
         /// </summary>
@@ -118,7 +122,6 @@ namespace PharmCompany.ConsoleApp.Menu
         private static void DisplayOperationMenu()
         {
             _selectedMainMenuItem = _selectedMenuItem;
-            //DisplayMenu(_selectedMenuItem?.MenuItemName, _commonOperationMenu);
             DisplayMenu(_selectedMenuItem?.MenuItemName, _selectedMenuItem?.SubMenu);
             Back();
         }
@@ -179,7 +182,7 @@ namespace PharmCompany.ConsoleApp.Menu
             var modelProperties = typeof(T1).GetProperties(BindingFlags.Public | BindingFlags.Instance);
             var dependOnTable = _selectedMainMenuItem.DependOnTables.First();
 
-            var selectedGuid = GetDependOnGuid<T2>(modelProperties, dependOnTable);
+            var selectedGuid = GetDependOnGuid<T2>(dependOnTable.Value.TableName);
             if (string.IsNullOrEmpty(selectedGuid))
                 return;
 
@@ -206,16 +209,15 @@ namespace PharmCompany.ConsoleApp.Menu
             if (propertiesDict == null)
                 throw new InvalidOperationException(strings.ErrorProperties);
 
-            var modelProperties = typeof(T1).GetProperties(BindingFlags.Public | BindingFlags.Instance);
             var selectedGuid = string.Empty;
             var dependOnTables = _selectedMainMenuItem.DependOnTables.ToArray();
 
             for (int i = 0; i < dependOnTables.Length; i++)
             {
                 if (i == 0)
-                    selectedGuid = GetDependOnGuid<T2>(modelProperties, dependOnTables[i]);
+                    selectedGuid = GetDependOnGuid<T2>(dependOnTables[i].Value.TableName);
                 if (i == 1)
-                    selectedGuid = GetDependOnGuid<T3>(modelProperties, dependOnTables[i]);
+                    selectedGuid = GetDependOnGuid<T3>(dependOnTables[i].Value.TableName);
 
                 if (string.IsNullOrEmpty(selectedGuid))
                     return;
@@ -229,103 +231,97 @@ namespace PharmCompany.ConsoleApp.Menu
 
 
         /// <summary>
-        /// получить параметры основного объекта
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        private static Dictionary<string, string> GetMainObjectProperties<T>()
-            where T : new()
-        {
-            T model = CreateModel<T>();
-            var propertiesDict = GetProperties(model)
-                ?.Where(p => _selectedMainMenuItem.DbTable.ColumnNames.Contains(p.Name))
-                .ToDictionary(p => p.Name, p => $"N'{p.GetValue(model)}'");
-
-            return propertiesDict == null
-                || propertiesDict.Count() < 1
-                || !CheckProperties(_selectedMainMenuItem.DbTable.ColumnNames, propertiesDict.Keys.ToList())
-                ? null
-                : propertiesDict;
-        }
-
-
-
-
-        /// <summary>
-        /// Получить родительский guid
-        /// </summary>
-        /// <param name="dependDict"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        private static string GetDependOnGuid<T>(PropertyInfo[] modelProperties, KeyValuePair<string, DbTableModel> dependDict)
-            where T : new()
-        {
-            var masterModels = GetAll<T>(dependDict.Value.TableName);
-            DisplayToConsole.DisplayBody(
-                masterModels.Select(g => (g as ANameableEntityBase).DisplayFormat).ToArray(),
-                isNumberedList: true
-                );
-            var guids = masterModels
-                .Select(g => (g as ANameableEntityBase).Id.ToString())
-                .ToArray();
-
-            var selectedMasterNumber = InputNumber(guids.Length);
-            if (selectedMasterNumber == null)
-                return null;
-
-            var selectedGuid = guids[selectedMasterNumber.Value - 1];
-            return selectedGuid;
-        }
-
-
-
-        private static void InsertToDB(Dictionary<string, string> propertiesDict)
-        {
-            string columns = string.Join(", ", propertiesDict.Keys.ToArray());
-            string values = string.Join(", ", propertiesDict.Values.ToArray());
-
-            var sqlCommand = $"INSERT INTO [{_selectedMainMenuItem.DbTable.TableName}] ({columns}) VALUES ({values})";
-            var result = DbCommands.ExecuteCommand(sqlCommand);
-
-            if (result > 0)
-                DisplayToConsole.WaitForContinue(strings.ObjectAdded);
-            else
-                DisplayToConsole.WaitForContinue(strings.ObjectNotAdded);
-        }
-
-
-
-
-        /// <summary>
         /// Удаление объекта
         /// </summary>
         /// <typeparam name="T"></typeparam>
         private static void RemoveEntity<T>()
             where T : class, new()
         {
-            int? removeNumber = null;
-            string[] guids = null;
+            //int? removeNumber = null;
+            //string[] guids = null;
 
-            var models = GetAll<T>();
-            if (models == null)
+            var selectedGuid = GetDependOnGuid<T>();
+            if (string.IsNullOrEmpty(selectedGuid))
                 return;
 
-            DisplayToConsole.DisplayBody(models.Select(g => (g as ANameableEntityBase).DisplayFormat).ToArray(), isNumberedList: true);
-            guids = models
-                .Select(g => (g as ANameableEntityBase).Id.ToString())
-                .ToArray();
+            //var models = GetAll<T>();
+            //if (models == null)
+            //    return;
 
-            removeNumber = InputNumber(guids.Length);
-            if (removeNumber == null)
-                return;
+            //DisplayToConsole.DisplayBody(models.Select(g => (g as ANameableEntityBase).DisplayFormat).ToArray(), isNumberedList: true);
+            //guids = models
+            //    .Select(g => (g as ANameableEntityBase).Id.ToString())
+            //    .ToArray();
 
-            var sqlCommand = $"DELETE FROM [{_selectedMainMenuItem.DbTable.TableName}] WHERE [Id]='{guids[removeNumber.Value - 1]}'";
+            //removeNumber = InputNumber(guids.Length);
+            //if (removeNumber == null)
+            //    return;
+
+            var sqlCommand = $"DELETE FROM [{_selectedMainMenuItem.DbTable.TableName}] WHERE [Id]='{selectedGuid}'";
             var result = DbCommands.ExecuteCommand(sqlCommand);
 
             if (result > 0)
-                DisplayToConsole.WaitForContinue(string.Format(strings.ObjectDeleted, removeNumber.Value));
+                DisplayToConsole.WaitForContinue(strings.ObjectDeleted);
             else
-                DisplayToConsole.WaitForContinue(string.Format(strings.ObjectNotDeleted, removeNumber.Value));
+                DisplayToConsole.WaitForContinue(strings.ObjectNotDeleted);
+        }
+
+
+        /// <summary>
+        /// Список товаров в Аптеке
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        private static void GetGoods()
+        {
+            var table = DbCommands.DbTables.FirstOrDefault(t => t.TableName.StartsWith("Pharmacies"));
+            var selectedGuid = GetDependOnGuid<PharmacyModel>(table.TableName);
+            if (string.IsNullOrEmpty(selectedGuid))
+                return;
+
+            var sqlCommand = $"SELECT t1.Name, SUM(t2.GoodsCount) as sum FROM Goods as t1 " +
+                             $"JOIN BatchGoods as t2 ON t1.Id = t2.GoodsId " +
+                             $"JOIN Storages as t3 ON t2.StorageId = t3.Id " +
+                             $"where t3.PharmacyId = N'{selectedGuid}' " +
+                             $"group by t1.Name";
+
+            SelectFromDB(sqlCommand);
+        }
+
+
+        /// <summary>
+        /// Получение и отображение данных в консоли
+        /// </summary>
+        /// <param name="sqlCommand"></param>
+        private static void SelectFromDB(string sqlCommand)
+        {
+            var dataRecords = DbCommands.SelectCommand(sqlCommand).Result;
+
+            if (dataRecords == null
+                || dataRecords.Length < 1
+                )
+            {
+                DisplayToConsole.WaitForContinue("Нет данных");
+                return;
+            }
+
+            List<string[]> resultLst = new List<string[]>();
+            for (int i = 0; i < dataRecords.Length; i++)
+            {
+                var dataRecord = dataRecords[i];
+                Dictionary<string, string> dbValues = new Dictionary<string, string>();
+                for (int j = 0; j < dataRecord.FieldCount; j++)
+                {
+                    dbValues.Add(dataRecord.GetName(j), dataRecord.GetValue(j).ToString());
+                }
+                var lst = dbValues.Values.ToArray();
+                resultLst.Add(lst);
+            }
+
+            DisplayToConsole.DisplayBody(
+                resultLst.Select(v => $"{v[0]} ({v[1]})").ToArray(),
+                isNumberedList: true
+                );
+            DisplayToConsole.WaitForContinue();
         }
 
         #endregion // Operation menu actions
@@ -498,22 +494,6 @@ namespace PharmCompany.ConsoleApp.Menu
         }
 
 
-        //private static TDependent CreateDependentModel<TMaster, TDependent>(IDataRecord dataRecord = null)
-        //    where TMaster : new()
-        //    where TDependent : new()
-        //{
-        //    TDependent dependentModel;
-        //    if (dataRecord == null)
-        //    {
-        //        dependentModel = DisplayToConsole.CreateDependentObject<TMaster, TDependent>();
-        //        return dependentModel;
-        //    }
-
-        //    return new TDependent();
-        //}
-
-
-
 
         /// <summary>
         /// Проверка соответствия имён параметрав наименованиям колонок таблиц
@@ -571,6 +551,73 @@ namespace PharmCompany.ConsoleApp.Menu
                 return null;
             }
             return number;
+        }
+
+
+        /// <summary>
+        /// получить параметры основного объекта
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        private static Dictionary<string, string> GetMainObjectProperties<T>()
+            where T : new()
+        {
+            T model = CreateModel<T>();
+            var propertiesDict = GetProperties(model)
+                ?.Where(p => _selectedMainMenuItem.DbTable.ColumnNames.Contains(p.Name))
+                .ToDictionary(p => p.Name, p => $"N'{p.GetValue(model)}'");
+
+            return propertiesDict == null
+                || propertiesDict.Count() < 1
+                || !CheckProperties(_selectedMainMenuItem.DbTable.ColumnNames, propertiesDict.Keys.ToList())
+                ? null
+                : propertiesDict;
+        }
+
+
+        /// <summary>
+        /// Получить родительский guid
+        /// </summary>
+        /// <param name="dependDict"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        private static string GetDependOnGuid<T>(string tableName = "")
+            where T : new()
+        {
+            var masterModels = GetAll<T>(tableName);
+            DisplayToConsole.DisplayBody(
+                masterModels.Select(g => (g as ANameableEntityBase).DisplayFormat).ToArray(),
+                isNumberedList: true
+                );
+            var guids = masterModels
+                .Select(g => (g as ANameableEntityBase).Id.ToString())
+                .ToArray();
+
+            var selectedMasterNumber = InputNumber(guids.Length);
+            if (selectedMasterNumber == null)
+                return null;
+
+            var selectedGuid = guids[selectedMasterNumber.Value - 1];
+            return selectedGuid;
+        }
+
+
+        /// <summary>
+        /// Добавить в БД
+        /// </summary>
+        /// <param name="propertiesDict"></param>
+        private static void InsertToDB(Dictionary<string, string> propertiesDict)
+        {
+            string columns = string.Join(", ", propertiesDict.Keys.ToArray());
+            string values = string.Join(", ", propertiesDict.Values.ToArray());
+
+            var sqlCommand = $"INSERT INTO [{_selectedMainMenuItem.DbTable.TableName}] ({columns}) VALUES ({values})";
+            var result = DbCommands.ExecuteCommand(sqlCommand);
+
+            if (result > 0)
+                DisplayToConsole.WaitForContinue(strings.ObjectAdded);
+            else
+                DisplayToConsole.WaitForContinue(strings.ObjectNotAdded);
         }
     }
 }

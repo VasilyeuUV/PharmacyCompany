@@ -142,6 +142,15 @@ namespace PharmCompany.ConsoleApp {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Cписок товаров в аптеке.
+        /// </summary>
+        internal static string GetGoods {
+            get {
+                return ResourceManager.GetString("GetGoods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Товары.
         /// </summary>
         internal static string Goods {
@@ -169,7 +178,7 @@ namespace PharmCompany.ConsoleApp {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Объект под номером {0} удалён.
+        ///   Ищет локализованную строку, похожую на Объект удалён.
         /// </summary>
         internal static string ObjectDeleted {
             get {
@@ -187,7 +196,7 @@ namespace PharmCompany.ConsoleApp {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Объект под номером {0} удалить не удалось.
+        ///   Ищет локализованную строку, похожую на Объект удалить не удалось.
         /// </summary>
         internal static string ObjectNotDeleted {
             get {

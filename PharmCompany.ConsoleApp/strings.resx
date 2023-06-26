@@ -144,6 +144,9 @@
   <data name="Exit" xml:space="preserve">
     <value>Выход</value>
   </data>
+  <data name="GetGoods" xml:space="preserve">
+    <value>Cписок товаров в аптеке</value>
+  </data>
   <data name="Goods" xml:space="preserve">
     <value>Товары</value>
   </data>
@@ -154,13 +157,13 @@
     <value>Объект добавлен</value>
   </data>
   <data name="ObjectDeleted" xml:space="preserve">
-    <value>Объект под номером {0} удалён</value>
+    <value>Объект удалён</value>
   </data>
   <data name="ObjectNotAdded" xml:space="preserve">
     <value>Объект добавить не удалось</value>
   </data>
   <data name="ObjectNotDeleted" xml:space="preserve">
-    <value>Объект под номером {0} удалить не удалось</value>
+    <value>Объект удалить не удалось</value>
   </data>
   <data name="ObjectNotExist" xml:space="preserve">
     <value>Объекта под номером {0} не существует</value>
