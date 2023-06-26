@@ -63,7 +63,6 @@
     <Compile Include="Entities\Operations\ICreateableAsync.cs" />
     <Compile Include="Entities\Operations\IReadAllable.cs" />
     <Compile Include="Entities\Operations\IRemoveable.cs" />
-    <Compile Include="Menu\MainMenu.cs" />
     <Compile Include="Menu\MenuCommands\CommonCommands.cs" />
     <Compile Include="Menu\MenuCommands\DeleteCommands.cs" />
     <Compile Include="Menu\MenuCommands\InsertCommands.cs" />
