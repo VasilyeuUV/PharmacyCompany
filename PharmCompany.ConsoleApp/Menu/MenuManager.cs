@@ -55,7 +55,10 @@ namespace PharmCompany.ConsoleApp.Menu
                 MenuItemName = strings.Storages,
                 MenuItemAction = DisplayOperationMenu,
                 DbTable = DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Storages")),
-                //DbMasterTables = new [] {DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Pharmacies")) },
+                DependOnTables = new Dictionary<string, Models.DbTables.DbTableModel>
+                {
+                    { nameof(StorageModel.PharmacyId),  DbCommands.DbTables.FirstOrDefault(table => table.TableName.StartsWith("Pharmacies"))},
+                },
                 SubMenu = new[] {
                     //new MenuItemModel {MenuItemName = "Показать список", MenuItemAction = GetAll},
                     new MenuItemModel {MenuItemName = strings.Create, MenuItemAction = CreateDependentEntity<StorageModel, PharmacyModel>},
@@ -169,38 +172,21 @@ namespace PharmCompany.ConsoleApp.Menu
             where T2 : new()
             where T1 : new()
         {
-            Dictionary<string, string> propertiesDict = null;
-            string[] guids = null;
-            int? selectedMasterNumber = null;
-
-            T1 dependentModel = CreateModel<T1>();
-            propertiesDict = GetProperties(dependentModel)?.Where(p => p.Name != "DisplayFormat")
-                .ToDictionary(p => p.Name, p => $"N'{p.GetValue(dependentModel)}'");
-
-            if (propertiesDict == null
-                || propertiesDict.Count() < 1
-                || !CheckProperties(_selectedMainMenuItem.DbTable.ColumnNames, propertiesDict.Keys.ToList())
-                )
+            var propertiesDict = GetMainObjectProperties<T1>();
+            if (propertiesDict == null)
                 throw new InvalidOperationException(strings.ErrorProperties);
 
-            var masterModels = GetAll<T2>(_selectedMainMenuItem.DependOnTables.FirstOrDefault().Value.TableName);
-            DisplayToConsole.DisplayBody(
-                masterModels.Select(g => (g as ANameableEntityBase).DisplayFormat).ToArray(),
-                isNumberedList: true
-                );
-            guids = masterModels
-                .Select(g => (g as ANameableEntityBase).Id.ToString())
-                .ToArray();
+            var modelProperties = typeof(T1).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var dependOnTable = _selectedMainMenuItem.DependOnTables.First();
 
-            selectedMasterNumber = InputNumber(guids.Length);
-            if (selectedMasterNumber == null)
+            var selectedGuid = GetDependOnGuid<T2>(modelProperties, dependOnTable);
+            if (string.IsNullOrEmpty(selectedGuid))
                 return;
 
-            var selectedGuid = guids[selectedMasterNumber.Value - 1];
-
-            var masterId = propertiesDict.FirstOrDefault(k => k.Key.EndsWith("Id") && k.Key.Length > 2).Key;
-            if (!string.IsNullOrEmpty(masterId))
-                propertiesDict[masterId] = $"N'{selectedGuid}'";
+            var dependOnTables = _selectedMainMenuItem.DependOnTables.ToArray();
+            var id = propertiesDict.FirstOrDefault(k => k.Key == dependOnTable.Key).Key;
+            if (!string.IsNullOrEmpty(id))
+                propertiesDict[id] = $"N'{selectedGuid}'";
 
             InsertToDB(propertiesDict);
         }
@@ -216,25 +202,14 @@ namespace PharmCompany.ConsoleApp.Menu
                where T2 : new()
                where T3 : new()
         {
-            Dictionary<string, string> propertiesDict = null;
-            string[] guids = null;
-            int? selectedMasterNumber = null;
-
-            T1 model = CreateModel<T1>();
-            var modelProperties = typeof(T1).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-            propertiesDict = GetProperties(model)
-                ?.Where(p => _selectedMainMenuItem.DbTable.ColumnNames.Contains(p.Name))
-                .ToDictionary(p => p.Name, p => $"N'{p.GetValue(model)}'");
-
-            if (propertiesDict == null
-                || propertiesDict.Count() < 1
-                || !CheckProperties(_selectedMainMenuItem.DbTable.ColumnNames, propertiesDict.Keys.ToList())
-                )
+            var propertiesDict = GetMainObjectProperties<T1>();
+            if (propertiesDict == null)
                 throw new InvalidOperationException(strings.ErrorProperties);
 
+            var modelProperties = typeof(T1).GetProperties(BindingFlags.Public | BindingFlags.Instance);
             var selectedGuid = string.Empty;
             var dependOnTables = _selectedMainMenuItem.DependOnTables.ToArray();
+
             for (int i = 0; i < dependOnTables.Length; i++)
             {
                 if (i == 0)
@@ -242,12 +217,38 @@ namespace PharmCompany.ConsoleApp.Menu
                 if (i == 1)
                     selectedGuid = GetDependOnGuid<T3>(modelProperties, dependOnTables[i]);
 
-                var masterId = propertiesDict.FirstOrDefault(k => k.Key == dependOnTables[i].Key).Key;
-                if (!string.IsNullOrEmpty(masterId))
-                    propertiesDict[masterId] = $"N'{selectedGuid}'";
+                if (string.IsNullOrEmpty(selectedGuid))
+                    return;
+
+                var id = propertiesDict.FirstOrDefault(k => k.Key == dependOnTables[i].Key).Key;
+                if (!string.IsNullOrEmpty(id))
+                    propertiesDict[id] = $"N'{selectedGuid}'";
             }
             InsertToDB(propertiesDict);
         }
+
+
+        /// <summary>
+        /// получить параметры основного объекта
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        private static Dictionary<string, string> GetMainObjectProperties<T>()
+            where T : new()
+        {
+            T model = CreateModel<T>();
+            var propertiesDict = GetProperties(model)
+                ?.Where(p => _selectedMainMenuItem.DbTable.ColumnNames.Contains(p.Name))
+                .ToDictionary(p => p.Name, p => $"N'{p.GetValue(model)}'");
+
+            return propertiesDict == null
+                || propertiesDict.Count() < 1
+                || !CheckProperties(_selectedMainMenuItem.DbTable.ColumnNames, propertiesDict.Keys.ToList())
+                ? null
+                : propertiesDict;
+        }
+
+
 
 
         /// <summary>
@@ -257,7 +258,7 @@ namespace PharmCompany.ConsoleApp.Menu
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
         private static string GetDependOnGuid<T>(PropertyInfo[] modelProperties, KeyValuePair<string, DbTableModel> dependDict)
-            where T: new()
+            where T : new()
         {
             var masterModels = GetAll<T>(dependDict.Value.TableName);
             DisplayToConsole.DisplayBody(

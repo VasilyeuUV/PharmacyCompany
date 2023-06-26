@@ -164,15 +164,32 @@ namespace PharmCompany.ConsoleApp.Services
             while (true)
             {
                 key = Console.ReadKey(true);
-                if (key.Key == ConsoleKey.Escape)
-                    return null;
                 if (key.Key == ConsoleKey.Enter)
                     break;
 
-                if (char.IsDigit(key.KeyChar))
+                switch (key.Key)
                 {
-                    sb.Append(key.KeyChar);
-                    Console.Write(key.KeyChar);
+                    case ConsoleKey.Escape:
+                        return null;
+                    case ConsoleKey.Backspace:
+                        if (sb.Length > 0)
+                        {
+                            sb.Remove(sb.Length - 1, 1);
+                            int posTop = Console.CursorTop;
+                            int posLeft = Console.CursorLeft;
+                            Console.SetCursorPosition(posLeft - 1, posTop);
+                            Console.Write(" ");
+                            Console.SetCursorPosition(posLeft - 1, posTop);
+
+                        }
+                        break;
+                    default:
+                        if (char.IsDigit(key.KeyChar))
+                        {
+                            sb.Append(key.KeyChar);
+                            Console.Write(key.KeyChar);
+                        }
+                        break;
                 }
             }
             Console.WriteLine();
